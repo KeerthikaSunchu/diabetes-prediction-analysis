@@ -1,0 +1,814 @@
+---
+title: "Untitled"
+author: "Keerthika_Sunchu"
+date: "2024-04-24"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+#Loading and Exploring the Dataset
+```{r}
+library(readr)
+diabetes_prediction_dataset <- read_csv("C:/Users/KeerthikaSunchu/Downloads/diabetes_prediction_dataset.csv")
+View(diabetes_prediction_dataset)
+```
+```{r}
+#checking the number of rows and columns
+dim(diabetes_prediction_dataset)
+```
+The dataset contains 100,000 rows and 9 columns.
+
+```{r}
+#Viewing the first few rows of the dataset
+head(diabetes_prediction_dataset)
+```
+```{r}
+column_names = names(diabetes_prediction_dataset)
+print(column_names)
+```
+
+```{r}
+#checking for datastructures of the dataset
+str(diabetes_prediction_dataset)
+```
+
+```{r}
+# Summary of all the data attributes 
+summary(diabetes_prediction_dataset)
+```
+#Counting null values for each variable
+```{r}
+null_values_in_age <- sum(is.na(diabetes_prediction_dataset$age))
+print(null_values_in_age)
+null_values_in_bmi <- sum(is.na(diabetes_prediction_dataset$bmi))
+print(null_values_in_bmi)
+null_values_in_gender <- sum(is.na(diabetes_prediction_dataset$gender))
+print(null_values_in_gender)
+null_values_in_hypertension <- sum(is.na(diabetes_prediction_dataset$hypertension))
+print(null_values_in_hypertension)
+null_values_in_heart_disease <- sum(is.na(diabetes_prediction_dataset$heart_disease))
+print(null_values_in_heart_disease)
+null_values_in_smoking_history <- sum(is.na(diabetes_prediction_dataset$smoking_history))
+print(null_values_in_smoking_history)
+null_values_in_HbA1c_level <- sum(is.na(diabetes_prediction_dataset$HbA1c_level))
+print(null_values_in_HbA1c_level)
+null_values_in_blood_glucose_level <- sum(is.na(diabetes_prediction_dataset$blood_glucose_level))
+print(null_values_in_blood_glucose_level)
+null_values_in_diabetes <- sum(is.na(diabetes_prediction_dataset$diabetes))
+print(null_values_in_diabetes)
+```
+#Checking for outliers
+```{r}
+# Install patchwork package if not already installed
+install.packages("patchwork")
+
+# Load necessary libraries
+library(ggplot2)
+library(patchwork)
+
+# Create boxplots for continuous variables
+boxplot_age <- ggplot(diabetes_prediction_dataset, aes(y = age)) +
+  geom_boxplot(fill = "skyblue", color = "black") +
+  labs(title = "Boxplot of Age")
+
+boxplot_bmi <- ggplot(diabetes_prediction_dataset, aes(y = bmi)) +
+  geom_boxplot(fill = "skyblue", color = "black") +
+  labs(title = "Boxplot of BMI")
+
+boxplot_HbA1c <- ggplot(diabetes_prediction_dataset, aes(y = HbA1c_level)) +
+  geom_boxplot(fill = "skyblue", color = "black") +
+  labs(title = "Boxplot of HbA1c Level")
+
+boxplot_blood_glucose <- ggplot(diabetes_prediction_dataset, aes(y = blood_glucose_level)) +
+  geom_boxplot(fill = "skyblue", color = "black") +
+  labs(title = "Boxplot of Blood Glucose Level")
+
+# Arrange boxplots using patchwork
+arranged_plots <- boxplot_age + boxplot_bmi + boxplot_HbA1c + boxplot_blood_glucose
+arranged_plots <- arranged_plots + plot_layout(ncol = 2)
+
+# Print the arranged plots
+arranged_plots
+
+```
+#Removing the outliers
+```{r}
+# Load the dplyr package
+library(dplyr)
+
+# Calculate the IQR for HbA1c level
+Q1_HbA1c <- quantile(diabetes_prediction_dataset$HbA1c_level, 0.25, na.rm = TRUE)  # First Quartile (25th percentile)
+Q3_HbA1c <- quantile(diabetes_prediction_dataset$HbA1c_level, 0.75, na.rm = TRUE)  # Third Quartile (75th percentile)
+IQR_HbA1c <- Q3_HbA1c - Q1_HbA1c  # Interquartile Range
+
+# Define outlier thresholds
+lower_bound_HbA1c <- Q1_HbA1c - 1.5 * IQR_HbA1c
+upper_bound_HbA1c <- Q3_HbA1c + 1.5 * IQR_HbA1c
+
+# Filter out outliers for HbA1c level
+cleaned_dataset <- diabetes_prediction_dataset %>% 
+  filter(HbA1c_level >= lower_bound_HbA1c & HbA1c_level <= upper_bound_HbA1c)
+
+# Calculate the IQR for blood glucose level
+Q1_blood_glucose <- quantile(diabetes_prediction_dataset$blood_glucose_level, 0.25, na.rm = TRUE)  # First Quartile (25th percentile)
+Q3_blood_glucose <- quantile(diabetes_prediction_dataset$blood_glucose_level, 0.75, na.rm = TRUE)  # Third Quartile (75th percentile)
+IQR_blood_glucose <- Q3_blood_glucose - Q1_blood_glucose  # Interquartile Range
+
+# Define outlier thresholds
+lower_bound_blood_glucose <- Q1_blood_glucose - 1.5 * IQR_blood_glucose
+upper_bound_blood_glucose <- Q3_blood_glucose + 1.5 * IQR_blood_glucose
+
+# Filter out outliers for blood glucose level
+cleaned_dataset <- cleaned_dataset %>% 
+  filter(blood_glucose_level >= lower_bound_blood_glucose & blood_glucose_level <= upper_bound_blood_glucose)
+
+# Calculate the IQR for BMI
+Q1_bmi <- quantile(diabetes_prediction_dataset$bmi, 0.25, na.rm = TRUE)  # First Quartile (25th percentile)
+Q3_bmi <- quantile(diabetes_prediction_dataset$bmi, 0.75, na.rm = TRUE)  # Third Quartile (75th percentile)
+IQR_bmi <- Q3_bmi - Q1_bmi  # Interquartile Range
+
+# Define outlier thresholds
+lower_bound_bmi <- Q1_bmi - 1.5 * IQR_bmi
+upper_bound_bmi <- Q3_bmi + 1.5 * IQR_bmi
+
+# Filter out outliers for BMI
+cleaned_dataset <- cleaned_dataset %>% 
+  filter(bmi >= lower_bound_bmi & bmi <= upper_bound_bmi)
+
+# View the dimensions of the cleaned dataset to confirm rows are dropped
+dim(cleaned_dataset)
+
+```
+The cleaned dataset after removing outliers has 90387 rows and 9 columns. 
+
+```{r}
+# Load necessary libraries
+library(ggplot2)
+library(patchwork)
+# Re-create the boxplots for the cleaned continuous variables
+boxplot_age_clean <- ggplot(cleaned_dataset, aes(y = age)) +
+  geom_boxplot(fill = "skyblue", color = "black") +
+  labs(title = "Boxplot of Age (Cleaned)")
+
+boxplot_bmi_clean <- ggplot(cleaned_dataset, aes(y = bmi)) +
+  geom_boxplot(fill = "skyblue", color = "black") +
+  labs(title = "Boxplot of BMI (Cleaned)")
+
+boxplot_HbA1c_clean <- ggplot(cleaned_dataset, aes(y = HbA1c_level)) +
+  geom_boxplot(fill = "skyblue", color = "black") +
+  labs(title = "Boxplot of HbA1c Level (Cleaned)")
+
+boxplot_blood_glucose_clean <- ggplot(cleaned_dataset, aes(y = blood_glucose_level)) +
+  geom_boxplot(fill = "skyblue", color = "black") +
+  labs(title = "Boxplot of Blood Glucose Level (Cleaned)")
+
+# Arrange the cleaned boxplots using patchwork
+arranged_plots_clean <- boxplot_age_clean + boxplot_bmi_clean + boxplot_HbA1c_clean + boxplot_blood_glucose_clean
+arranged_plots_clean <- arranged_plots_clean + plot_layout(ncol = 2)
+
+# Print the arranged plots
+arranged_plots_clean
+
+```
+#Calculating summary statistics for the cleaned dataset
+```{r}
+#checking the number of rows and columns
+dim(cleaned_dataset)
+```
+```{r}
+head(cleaned_dataset)
+
+```
+```{r}
+# Summary of all the data attributes 
+summary(cleaned_dataset)
+
+```
+The primary effect of removing outliers has been the reduction of variability and the removal of extreme values in continuous variables such as BMI, HbA1c level, and blood glucose levels. 
+
+#Gender
+```{r}
+# Count or frequency of each gender
+gender_frequency <- table(cleaned_dataset$gender)
+
+# Displaying frequency of each gender
+print("Frequency of each gender:")
+print(gender_frequency)
+
+# Percentage or proportion of each gender
+gender_percentage <- prop.table(gender_frequency) * 100
+
+# Displaying percentage or proportion of each gender
+print("Percentage of each gender:")
+print(gender_percentage)
+
+```
+#Age
+```{r}
+# Measures of Central Tendency
+mean_age <- mean(cleaned_dataset$age)
+median_age <- median(cleaned_dataset$age)
+
+# Displaying Measures of Central Tendency
+print("Measures of Central Tendency:")
+print(paste("Mean Age:", mean_age))
+print(paste("Median Age:", median_age))
+
+# Measures of Dispersion/Spread
+range_age <- range(cleaned_dataset$age)
+variance_age <- var(cleaned_dataset$age)
+sd_age <- sd(cleaned_dataset$age)
+iqr_age <- IQR(cleaned_dataset$age)
+
+# Displaying Measures of Dispersion/Spread
+print("Measures of Dispersion/Spread:")
+print(paste("Range of Age:", range_age))
+print(paste("Variance of Age:", variance_age))
+print(paste("Standard Deviation of Age:", sd_age))
+print(paste("Interquartile Range of Age:", iqr_age))
+
+# Minimum and Maximum values
+min_age <- min(cleaned_dataset$age)
+max_age <- max(cleaned_dataset$age)
+
+# Displaying Minimum and Maximum values
+print("Minimum and Maximum Age:")
+print(paste("Minimum Age:", min_age))
+print(paste("Maximum Age:", max_age))
+
+# Percentiles
+percentiles_age <- quantile(cleaned_dataset$age, c(0.25, 0.5, 0.75))
+
+# Displaying Percentiles
+print("Percentiles of Age:")
+print(percentiles_age)
+
+```
+#Hypertension
+```{r}
+# Count or frequency of hypertension
+hypertension_frequency <- table(cleaned_dataset$hypertension)
+# Percentage or proportion of hypertension
+hypertension_percentage <- prop.table(hypertension_frequency) * 100
+
+# Displaying frequency and percentage of hypertension
+print("Frequency of Hypertension:")
+print(hypertension_frequency)
+print("Percentage of Hypertension:")
+print(hypertension_percentage)
+```
+#Heart Disease
+```{r}
+# Count or frequency of heart disease
+heart_disease_frequency <- table(cleaned_dataset$heart_disease)
+# Percentage or proportion of heart disease
+heart_disease_percentage <- prop.table(heart_disease_frequency) * 100
+
+# Displaying frequency and percentage of heart disease
+print("Frequency of Heart Disease:")
+print(heart_disease_frequency)
+print("Percentage of Heart Disease:")
+print(heart_disease_percentage)
+```
+#Smoking History
+```{r}
+# Count or frequency of smoking history
+smoking_history_frequency <- table(cleaned_dataset$smoking_history)
+# Percentage or proportion of smoking history
+smoking_history_percentage <- prop.table(smoking_history_frequency) * 100
+
+# Displaying frequency and percentage of smoking history
+print("Frequency of Smoking History:")
+print(smoking_history_frequency)
+print("Percentage of Smoking History:")
+print(smoking_history_percentage)
+```
+#BMI
+```{r}
+# Measures of Central Tendency for BMI
+mean_bmi <- mean(cleaned_dataset$bmi)
+median_bmi <- median(cleaned_dataset$bmi)
+
+# Displaying Measures of Central Tendency for BMI
+print("Measures of Central Tendency for BMI:")
+print(paste("Mean BMI:", mean_bmi))
+print(paste("Median BMI:", median_bmi))
+
+# Measures of Dispersion/Spread for BMI
+range_bmi <- range(cleaned_dataset$bmi)
+variance_bmi <- var(cleaned_dataset$bmi)
+sd_bmi <- sd(cleaned_dataset$bmi)
+iqr_bmi <- IQR(cleaned_dataset$bmi)
+
+# Displaying Measures of Dispersion/Spread for BMI
+print("Measures of Dispersion/Spread for BMI:")
+print(paste("Range of BMI:", range_bmi))
+print(paste("Variance of BMI:", variance_bmi))
+print(paste("Standard Deviation of BMI:", sd_bmi))
+print(paste("Interquartile Range of BMI:", iqr_bmi))
+
+# Minimum and Maximum values for BMI
+min_bmi <- min(cleaned_dataset$bmi)
+max_bmi <- max(cleaned_dataset$bmi)
+
+# Displaying Minimum and Maximum values for BMI
+print("Minimum and Maximum BMI:")
+print(paste("Minimum BMI:", min_bmi))
+print(paste("Maximum BMI:", max_bmi))
+
+# Percentiles for BMI
+percentiles_bmi <- quantile(cleaned_dataset$bmi, c(0.25, 0.5, 0.75))
+
+# Displaying Percentiles for BMI
+print("Percentiles of BMI:")
+print(percentiles_bmi)
+```
+#HbA1c Level
+```{r}
+# Measures of Central Tendency for HbA1c Level
+mean_hba1c <- mean(cleaned_dataset$HbA1c_level)
+median_hba1c <- median(cleaned_dataset$HbA1c_level)
+
+# Displaying Measures of Central Tendency for HbA1c Level
+print("Measures of Central Tendency for HbA1c Level:")
+print(paste("Mean HbA1c Level:", mean_hba1c))
+print(paste("Median HbA1c Level:", median_hba1c))
+
+# Measures of Dispersion/Spread for HbA1c Level
+range_hba1c <- range(cleaned_dataset$HbA1c_level)
+variance_hba1c <- var(cleaned_dataset$HbA1c_level)
+sd_hba1c <- sd(cleaned_dataset$HbA1c_level)
+iqr_hba1c <- IQR(cleaned_dataset$HbA1c_level)
+
+# Displaying Measures of Dispersion/Spread for HbA1c Level
+print("Measures of Dispersion/Spread for HbA1c Level:")
+print(paste("Range of HbA1c Level:", range_hba1c))
+print(paste("Variance of HbA1c Level:", variance_hba1c))
+print(paste("Standard Deviation of HbA1c Level:", sd_hba1c))
+print(paste("Interquartile Range of HbA1c Level:", iqr_hba1c))
+
+# Minimum and Maximum values for HbA1c Level
+min_hba1c <- min(cleaned_dataset$HbA1c_level)
+max_hba1c <- max(cleaned_dataset$HbA1c_level)
+
+# Displaying Minimum and Maximum values for HbA1c Level
+print("Minimum and Maximum HbA1c Level:")
+print(paste("Minimum HbA1c Level:", min_hba1c))
+print(paste("Maximum HbA1c Level:", max_hba1c))
+
+# Percentiles for HbA1c Level
+percentiles_hba1c <- quantile(cleaned_dataset$HbA1c_level, c(0.25, 0.5, 0.75))
+
+# Displaying Percentiles for HbA1c Level
+print("Percentiles of HbA1c Level:")
+print(percentiles_hba1c)
+
+```
+#Blood Glucose Level
+```{r}
+# Measures of Central Tendency for Blood Glucose Level
+mean_blood_glucose <- mean(cleaned_dataset$blood_glucose_level)
+median_blood_glucose <- median(cleaned_dataset$blood_glucose_level)
+
+# Displaying Measures of Central Tendency for Blood Glucose Level
+print("Measures of Central Tendency for Blood Glucose Level:")
+print(paste("Mean Blood Glucose Level:", mean_blood_glucose))
+print(paste("Median Blood Glucose Level:", median_blood_glucose))
+
+# Measures of Dispersion/Spread for Blood Glucose Level
+range_blood_glucose <- range(cleaned_dataset$blood_glucose_level)
+variance_blood_glucose <- var(cleaned_dataset$blood_glucose_level)
+sd_blood_glucose <- sd(cleaned_dataset$blood_glucose_level)
+iqr_blood_glucose <- IQR(cleaned_dataset$blood_glucose_level)
+
+# Displaying Measures of Dispersion/Spread for Blood Glucose Level
+print("Measures of Dispersion/Spread for Blood Glucose Level:")
+print(paste("Range of Blood Glucose Level:", range_blood_glucose))
+print(paste("Variance of Blood Glucose Level:", variance_blood_glucose))
+print(paste("Standard Deviation of Blood Glucose Level:", sd_blood_glucose))
+print(paste("Interquartile Range of Blood Glucose Level:", iqr_blood_glucose))
+
+# Minimum and Maximum values for Blood Glucose Level
+min_blood_glucose <- min(cleaned_dataset$blood_glucose_level)
+max_blood_glucose <- max(cleaned_dataset$blood_glucose_level)
+
+# Displaying Minimum and Maximum values for Blood Glucose Level
+print("Minimum and Maximum Blood Glucose Level:")
+print(paste("Minimum Blood Glucose Level:", min_blood_glucose))
+print(paste("Maximum Blood Glucose Level:", max_blood_glucose))
+
+# Percentiles for Blood Glucose Level
+percentiles_blood_glucose <- quantile(cleaned_dataset$blood_glucose_level, c(0.25, 0.5, 0.75))
+
+# Displaying Percentiles for Blood Glucose Level
+print("Percentiles of Blood Glucose Level:")
+print(percentiles_blood_glucose)
+
+```
+#Diabetes
+```{r}
+# Count or frequency of diabetes
+diabetes_frequency <- table(cleaned_dataset$diabetes)
+print("Frequency of Diabetes:")
+print(diabetes_frequency)
+
+# Percentage or proportion of diabetes
+diabetes_percentage <- prop.table(diabetes_frequency) * 100
+print("Percentage of Diabetes:")
+print(diabetes_percentage)
+
+```
+
+#Visualization for the cleaned dataset
+```{r}
+library(ggplot2)
+# Gender (Categorical Variable)
+ggplot(cleaned_dataset, aes(x = gender)) +
+  geom_bar(fill = "#99CCFF", color = "black") +  # Custom color for bars
+  labs(title = "Distribution of Gender")
+
+# Create a pie chart for gender
+pie(table(diabetes_prediction_dataset$gender),
+    main = "Distribution of gender",
+    col = c("cyan", "pink"),
+    labels = paste(names(table(diabetes_prediction_dataset$gender)), "\n", table(diabetes_prediction_dataset$gender), sep = ""))
+
+# Age (Continuous Variable)
+ggplot(cleaned_dataset, aes(x = age)) +
+  geom_histogram(fill = "#FF9999", color = "black", bins = 30) +  # Custom color for bars
+  labs(title = "Distribution of Age")
+
+# Hypertension (Categorical Variable)
+ggplot(cleaned_dataset, aes(x = factor(hypertension))) +
+  geom_bar(fill = "#66CC99", color = "black") +  # Custom color for bars
+  labs(title = "Distribution of Hypertension")
+
+# Heart Disease (Categorical Variable)
+ggplot(cleaned_dataset, aes(x = factor(heart_disease))) +
+  geom_bar(fill = "#FFCC66", color = "black") +  # Custom color for bars
+  labs(title = "Distribution of Heart Disease")
+
+# Smoking History (Categorical Variable)
+ggplot(cleaned_dataset, aes(x = smoking_history)) +
+  geom_bar(fill = "#FF99CC", color = "black") +  # Custom color for bars
+  labs(title = "Distribution of Smoking History")
+
+# Create a pie chart for Smoking history
+pie(table(cleaned_dataset$smoking_history),
+    main = "Distribution of smoking history",
+    col = c("lightblue", "pink", "yellow", "black", "cyan", "green"),
+    labels = paste(names(table(cleaned_dataset$smoking_history)), "\n", table(cleaned_dataset$smoking_history), sep = ""))
+
+
+# BMI (Continuous Variable)
+ggplot(cleaned_dataset, aes(x = bmi)) +
+  geom_histogram(fill = "#99CCFF", color = "black", bins = 30) +  # Custom color for bars
+  labs(title = "Distribution of BMI")
+
+# HbA1c_level (Continuous Variable)
+ggplot(cleaned_dataset, aes(x = HbA1c_level)) +
+  geom_histogram(fill = "#FF9999", color = "black", bins = 30) +  # Custom color for bars
+  labs(title = "Distribution of HbA1c Level")
+
+# Blood Glucose Level (Continuous Variable)
+ggplot(cleaned_dataset, aes(x = blood_glucose_level)) +
+  geom_histogram(fill = "#66CC99", color = "black", bins = 30) +  # Custom color for bars
+  labs(title = "Distribution of Blood Glucose Level")
+
+```
+#Normality Testing
+```{r}
+# Perform Shapiro-Wilk test on various columns
+shapiro_age <- shapiro.test(cleaned_dataset$age)
+shapiro_bmi <- shapiro.test(cleaned_dataset$bmi)
+shapiro_hba1c <- shapiro.test(cleaned_dataset$HbA1c_level)
+shapiro_glucose <- shapiro.test(cleaned_dataset$blood_glucose_level)
+
+# Print the results
+print("Shapiro-Wilk Test for Age:")
+print(shapiro_age)
+
+print("Shapiro-Wilk Test for BMI:")
+print(shapiro_bmi)
+
+print("Shapiro-Wilk Test for HbA1c Level:")
+print(shapiro_hba1c)
+
+print("Shapiro-Wilk Test for Blood Glucose Level:")
+print(shapiro_glucose)
+```
+Interpretation: Since our sample size is over 5000, we could not perform Shapiro Wilk test for normality. So we went ahead with Q-Q plots and histograms to assess symmetry of our data.
+
+
+#Creating Q-Q plots and histograms with normal curve for assessing normality.
+```{r}
+# Q-Q Plot for Age
+# Function to create Q-Q plots
+create_qq_plot <- function(data, column) {
+  qqnorm(data[[column]], main = paste("Q-Q Plot of", column))
+  qqline(data[[column]], col = "red", lwd = 2)
+}
+
+# Create Q-Q plots for each continuous variable
+create_qq_plot(cleaned_dataset, "age")
+create_qq_plot(cleaned_dataset, "bmi")
+create_qq_plot(cleaned_dataset, "HbA1c_level")
+create_qq_plot(cleaned_dataset, "blood_glucose_level")
+
+```
+A Q-Q plot is a graphical tool to help us assess if a set of data plausibly came from some theoretical distribution such as a Normal distribution.
+
+#1. Q-Q Plot of Age:
+The Q-Q plot for age does not follow a normal distribution. The plot shows a deviation from the red line at both ends (left tail and right tail), suggesting that the distribution of age is not normal. The left tail indicates that there are more lower values than expected under a normal distribution, while the right tail suggests more higher values. 
+
+#2. Q-Q plot of BMI: 
+The Q-Q plot for BMI suggests that the data does not follow a normal distribution. The deviations from the straight line reveal that the distribution is likely skewed or has different tail behaviors compared to the normal distribution.
+
+#3. Q-Q Plot of HbA1c_level:
+The Q-Q plot for HbA1c_level suggests that the data is not normally distributed.
+
+#4. Q-Q Plot for blood_glucose_level
+The Q-Q plot for blood_glucose_level suggests that the data is not normally distributed. There is a clear deviation from the red line, especially on the right side of the plot, which means the distribution has a positive skew or a rightward tail.
+
+```{r}
+# Histogram for Age with Normal Curve
+hist(cleaned_dataset$age, freq = FALSE, main = "Age Distribution")
+curve(dnorm(x, mean = mean(cleaned_dataset$age), sd = sd(cleaned_dataset$age)), add = TRUE, col = "red")
+
+# Histogram for BMI with Normal Curve
+hist(cleaned_dataset$bmi, freq = FALSE, main = "BMI Distribution")
+curve(dnorm(x, mean = mean(cleaned_dataset$bmi), sd = sd(cleaned_dataset$bmi)), add = TRUE, col = "red")
+
+# Histogram for HbA1c Level with Normal Curve
+hist(cleaned_dataset$HbA1c_level, freq = FALSE, main = "HbA1c Level Distribution")
+curve(dnorm(x, mean = mean(cleaned_dataset$HbA1c_level), sd = sd(cleaned_dataset$HbA1c_level)), add = TRUE, col = "red")
+
+# Histogram for Blood Glucose Level with Normal Curve
+hist(cleaned_dataset$blood_glucose_level, freq = FALSE, main = "Blood Glucose Level Distribution")
+curve(dnorm(x, mean = mean(cleaned_dataset$blood_glucose_level), sd = sd(cleaned_dataset$blood_glucose_level)), add = TRUE, col = "red")
+
+
+```
+#Age distribution:
+The fact that the red curve does not match the height of the bars perfectly suggests that the age distribution is not exactly normal. The skew towards older ages, evident in the tall bar on the far right, is not captured by the red curve, indicating that there is a higher than expected number of older individuals in the sample compared to a normal distribution. If the data were perfectly normally distributed, we would expect the bars to closely follow the red curve across all age groups.
+
+#BMI distribution:
+The distribution of BMI is not normal, as indicated by the discrepancy between the histogram bars and the red curve. The peak in the histogram suggests that most individuals have a BMI near the median but there's a long tail towards higher BMI values. This skewness suggests the presence of more individuals with a higher BMI than what would be expected in a normal distribution. The red curve does not match the shape of the histogram, confirming that the BMI distribution in this sample does not fit a normal distribution.
+
+#HbA1c Level distribution:
+The histogram displays multiple peaks, which suggests that the HbA1c level data is not unimodal and does not follow a normal distribution. This is a sign of a multimodal distribution. The distribution has peaks around the HbA1c levels of 5, 5.5, 6, and 6.5, which might correspond to common ranges of HbA1c levels in the population.
+The red curve does not match the observed distribution, highlighting the deviation from normality. The data show higher frequencies in certain HbA1c ranges than would be expected if the data were normally distributed. This could reflect clinical cut-off points for categorizing HbA1c levels or could indicate different subgroups within the population, such as non-diabetics, pre-diabetics, and diabetics.
+
+#Blood glucose level distribution:
+The red curve is the theoretical normal distribution curve based on the mean and standard deviation of the dataset's blood glucose levels. The distribution is not consistent with the red curve, indicating that the data are not normally distributed. Instead of a bell-shaped curve that we'd expect with a normal distribution, the histogram has a bimodal distribution with two distinct peaks and a right skew.
+
+
+#Performing logistic regression
+#Logistic regression is appropriate when the dependent variable is binary (i.e., diabetes yes/no).
+```{r}
+# Logistic regression with diabetes as the binary outcome and age as the predictor
+logistic_model1 <- glm(diabetes ~ age, data = cleaned_dataset, family = binomial())
+
+# Summary of the logistic model
+summary(logistic_model1)
+
+# Calculate the odds ratios from the model's coefficients
+odds_ratios <- exp(coef(logistic_model1))
+
+# Print the odds ratios
+print(odds_ratios)
+
+```
+Interpretation: The output suggests a significant relationship between age and the likelihood of having diabetes. In the model, the intercept has an estimate of -5.6094, which represents the log odds of diabetes when age is zero—a theoretical value since age cannot be zero in practice. More importantly, the age coefficient is 0.0511, indicating that with each additional year, the log odds of diabetes increase by this amount. The very small p-values for both coefficients (less than 2e-16) confirm their statistical significance. The model's fit is considerably improved from a version with no predictors (null deviance of 35743) to one with age included (residual deviance of 31467), and the Akaike Information Criterion (AIC) of 31471 suggests a good model fit. Lastly, the odds ratio for age is 1.0524, showing that each year of age is associated with a 5.2% increase in the odds of having diabetes, holding other factors constant. This significant association between age and diabetes prevalence is consistent with the understanding that the risk of diabetes increases with age.
+
+
+```{r}
+# Logistic regression with diabetes as the binary outcome and gender as the predictor
+logistic_model2 <- glm(diabetes ~ gender, data = cleaned_dataset, family = binomial())
+
+# Summary of the logistic model
+summary(logistic_model2)
+
+# Calculate the odds ratios from the model's coefficients
+odds_ratios <- exp(coef(logistic_model2))
+
+# Print the odds ratios
+print(odds_ratios)
+```
+Interpretation: The output indicates a significant association between gender and the likelihood of having diabetes. The negative intercept suggests that the reference group, typically females, has a lower log odds of diabetes. Males are shown to have a 39.27% higher odds of having diabetes compared to females, as evidenced by the coefficient of 0.33127 with a highly significant p-value. The 'genderOther' category does not show a significant effect on diabetes likelihood, likely due to a small sample size, as reflected by a large standard error and a non-significant p-value. The model demonstrates that gender is a relevant factor in diabetes prevalence, with males at a higher risk compared to the baseline female category. The AIC is 35631, slightly lower than the null model, suggesting only a marginal improvement in fit.the odds of being diagnosed with diabetes are 1.39 times higher for males compared to females, the reference group, after controlling for other factors in the model. This is evidenced by the odds ratio for genderMale which is 1.39274. On the other hand, the odds ratio for genderOther is approximately 0.00007749, which is very low, but this figure is likely not reliable due to the high standard error and the non-significant p-value, suggesting that any interpretation of the odds ratio for genderOther should be approached with caution.
+
+```{r}
+# Logistic regression with diabetes as the binary outcome and hypertension as the predictor
+logistic_model3 <- glm(diabetes ~ hypertension, data = cleaned_dataset, family = binomial())
+
+# Summary of the logistic model
+summary(logistic_model3)
+
+# Calculate the odds ratios from the model's coefficients
+odds_ratios <- exp(coef(logistic_model3))
+
+# Print the odds ratios
+print(odds_ratios)
+
+```
+Interpretation: The model's intercept has a significant negative value (-3.16674) with a very low p-value, indicating that for individuals without hypertension (assuming hypertension is coded as 0 for no and 1 for yes), the log odds of diabetes are low. The coefficient for hypertension is 1.66390, meaning that the presence of hypertension is associated with an increase in the log odds of having diabetes. This coefficient is highly significant, as suggested by a p-value of less than 2e-16. The model's goodness-of-fit is indicated by a substantial reduction in the residual deviance from the null deviance (from 35743 to 34231) upon including hypertension as a predictor. This suggests that hypertension has a strong association with the occurrence of diabetes in this dataset. The Akaike Information Criterion (AIC) of the model is 34235, which implies that the model has a good fit with the inclusion of hypertension. The odds ratio for hypertension, which is 5.27985493, can be interpreted as individuals with hypertension having approximately 5.28 times higher odds of being diagnosed with diabetes compared to individuals without hypertension. Only 6 iterations for Fisher Scoring indicate that the model achieved convergence without difficulty, suggesting a stable solution was found for the estimation of the coefficients.
+
+
+```{r}
+# Logistic regression with diabetes as the binary outcome and heart_disease as the predictor
+logistic_model4 <- glm(diabetes ~ heart_disease, data = cleaned_dataset, family = binomial())
+
+# Summary of the logistic model
+summary(logistic_model4)
+
+# Calculate the odds ratios from the model's coefficients
+odds_ratios <- exp(coef(logistic_model4))
+
+# Print the odds ratios
+print(odds_ratios)
+```
+Interpretation: The model’s findings are highly statistically significant, as indicated by the p-values that are less than 2e-16 for both the intercept and the heart disease variable. The intercept value of -3.08715 represents the log odds of diabetes when heart disease is absent (assuming the coding is 0 for no heart disease and 1 for heart disease). The coefficient for heart disease is 1.78971, which suggests that having heart disease is associated with an increased log odds of being diagnosed with diabetes. This association is highly statistically significant, based on the p-value and signified by the triple asterisks in the significance codes. The residual deviance shows a decrease from the null deviance, suggesting that the model including heart disease explains more of the variance in diabetes status than the model without any predictors. The Akaike Information Criterion (AIC) for the model is 34619, indicating a good fit. A lower AIC suggests a model that explains the data well while penalizing for any additional complexity. Interpreting the odds ratio of heart_disease, which is about 5.988, indicates that the odds of having diabetes are almost six times higher for individuals with heart disease compared to those without heart disease, controlling for other factors in the model. The model required six iterations to converge, which is within a normal range, indicating a reliable model fitting process
+
+```{r}
+# Logistic regression with diabetes as the binary outcome and smoking history as the predictor
+logistic_model5 <- glm(diabetes ~ smoking_history, data = cleaned_dataset, family = binomial())
+
+# Summary of the logistic model
+summary(logistic_model5)
+
+# Calculate the odds ratios from the model's coefficients
+odds_ratios <- exp(coef(logistic_model5))
+
+# Print the odds ratios
+print(odds_ratios)
+```
+Interpretation: The intercept of -2.77951, highly significant with a p-value less than 2e-16, serves as the baseline log odds of diabetes for the reference smoking category. For individuals who have ever smoked, the model reports an increase in the log odds of diabetes by 0.22304, translating to an odds ratio of 1.24987. This indicates that people who have ever smoked have a 24.9% higher chance of developing diabetes compared to the reference group, and this effect is statistically significant (p = 0.00534). Former smokers show a more pronounced risk increase, with a coefficient of 0.66686 and a corresponding odds ratio of 1.94811, denoting a 94.8% increase in the odds of diabetes, strongly supported by statistical significance (p < 2e-16).
+Conversely, those categorized as never smokers do not exhibit a statistically significant difference in diabetes risk, with a coefficient of -0.05111 and an odds ratio of 0.95017, indicating a negligible 5% reduction in risk. The 'No Info' category, representing individuals with no available smoking history, shows a significant reduction in risk, with a coefficient of -0.93523 and an odds ratio of 0.39249, suggesting a 60.7% lower risk compared to the reference category. The 'not current' smokers have an odds ratio of 1.01642, showing a very slight increase in risk, though their coefficient of 0.01628 is not statistically significant, indicating that their risk does not significantly differ from the reference group. An AIC of 34655 indicates a good fit to the data. The analysis underscores the significant impact of smoking history on diabetes risk, particularly noting the increased risks associated with ever and former smoking statuses and the decreased risk for those with no recorded smoking history.
+
+
+```{r}
+# Logistic regression with diabetes as the binary outcome and bmi as the predictor
+logistic_model6 <- glm(diabetes ~ bmi, data = cleaned_dataset, family = binomial())
+
+# Summary of the logistic model
+summary(logistic_model6)
+
+# Calculate the odds ratios from the model's coefficients
+odds_ratios <- exp(coef(logistic_model6))
+
+# Print the odds ratios
+print(odds_ratios)
+
+```
+Interpretation: The intercept term is estimated to be approximately -6.814, suggesting the log-odds of the outcome when all predictors are zero. The coefficient for BMI stands at around 0.139, indicating that for each one-unit increase in BMI, the log-odds of the outcome increase by approximately 0.139, holding other variables constant. Both the intercept and BMI coefficient demonstrate high statistical significance, supported by large z-values and p-values nearing zero. The model's fit is robust, as evidenced by the low AIC value, indicating a good fit to the data. Additionally, the odds ratio for BMI, approximately 1.149, highlights that for every one-unit increase in BMI, the odds of the outcome increase by a factor of about 1.149, independent of other factors.These findings indicate the statistically significant relationship between bmi and diabetes.
+
+
+```{r}
+# Logistic regression with diabetes as the binary outcome and HbA1c as the predictor
+logistic_model7 <- glm(diabetes ~ HbA1c_level, data = cleaned_dataset, family = binomial())
+
+# Summary of the logistic model
+summary(logistic_model7)
+
+# Calculate the odds ratios from the model's coefficients
+odds_ratios <- exp(coef(logistic_model7))
+
+# Print the odds ratios
+print(odds_ratios)
+
+```
+
+Interpretation: The intercept, estimated at approximately -18.094, denotes the log-odds of the outcome when all predictors are zero, while the coefficient for HbA1c_level, approximately 2.481, signifies that for each one-unit increase in HbA1c_level, the log-odds of the outcome surge by about 2.481, holding other variables constant. These estimates are underscored by their high statistical significance, evident through large z-values and extremely low p-values. The model demonstrates robust fit, supported by the low AIC value, indicating its efficacy in explaining the variation in the data. Moreover, the odds ratio for HbA1c_level, approximately 11.958, elucidates that for every one-unit increase in HbA1c_level, the odds of the outcome escalate by a factor of about 11.958, independent of other factors. These findings emphasize the pivotal role of HbA1c_level as a significant predictor in understanding the outcome variable
+
+```{r}
+# Logistic regression with diabetes as the binary outcome and blood glucose as the predictor
+logistic_model8 <- glm(diabetes ~ blood_glucose_level, data = cleaned_dataset, family = binomial())
+
+# Summary of the logistic model
+summary(logistic_model8)
+
+# Calculate the odds ratios from the model's coefficients
+odds_ratios <- exp(coef(logistic_model8))
+
+# Print the odds ratios
+print(odds_ratios)
+
+```
+Interpretation: The intercept, estimated at approximately -7.343, represents the log-odds of the outcome when all predictors are zero. Meanwhile, the coefficient for the blood glucose level, approximately 0.029, suggests that for each one-unit increase in blood glucose level, the log-odds of the outcome increase by approximately 0.029, with other variables held constant. These estimates are accompanied by high statistical significance, as evidenced by the large z-values and extremely low p-values. The model's fit is robust, indicated by the low AIC value, signifying its effectiveness in explaining the variability in the data. Moreover, the odds ratio for the blood glucose level, approximately 1.030, implies that for every one-unit increase in the blood glucose level, the odds of the outcome rise by a factor of about 1.030, independently of other factors. These findings underscore the crucial role of blood glucose level as a significant predictor in understanding the outcome variable
+
+```{r}
+# Multivariate Logistic Regression Model
+full_model <- glm(diabetes ~ age + gender + hypertension + heart_disease + smoking_history + bmi + HbA1c_level + blood_glucose_level,
+                  family = binomial(), data = cleaned_dataset)
+
+
+stepwise_model <- step(full_model, direction="both")
+
+# Print the summary of the refined model
+summary(stepwise_model)
+
+```
+Interpretation: The analysis clearly illustrates that traditional risk factors such as age, gender (male), higher BMI, elevated blood glucose, and increased HbA1c levels are significantly associated with higher odds of diabetes.Additionally, the presence of hypertension and heart disease also elevates diabetes risk. The variations in smoking history impact diabetes risk differently, with 'never' smokers and those with unspecified smoking information showing reduced odds. 
+
+#Non-parametric tests
+#The Kruskal-Wallis test is a non-parametric method used to determine if there are statistically significant relationships between predictor and outcome variables.
+
+```{r}
+# Load necessary library
+library(stats)
+
+# Perform Kruskal-Wallis test for age across different levels of diabetes
+kruskal_result_age <- kruskal.test(age ~ diabetes, data = cleaned_dataset)
+print(kruskal_result_age)
+
+# Perform Kruskal-Wallis test for BMI across different levels of diabetes
+kruskal_result_bmi <- kruskal.test(bmi ~ diabetes, data = cleaned_dataset)
+print(kruskal_result_bmi)
+
+# Perform Kruskal-Wallis test for HbA1c level across different levels of diabetes
+kruskal_result_HbA1c <- kruskal.test(HbA1c_level ~ diabetes, data = cleaned_dataset)
+print(kruskal_result_HbA1c)
+
+# Perform Kruskal-Wallis test for blood glucose level across different levels of diabetes
+kruskal_result_blood_glucose <- kruskal.test(blood_glucose_level ~ diabetes, data = cleaned_dataset)
+print(kruskal_result_blood_glucose)
+
+kruskal_result_blood_glucose <- kruskal.test(smoking_history ~ diabetes, data = cleaned_dataset)
+print(kruskal_result_blood_glucose)
+```
+Interpretation: 
+Age by Diabetes:
+The test yielded a Kruskal-Wallis chi-squared value of 3963.6 with a p-value < 2.2e-16. Based on these results, we reject the null hypothesis that there is no difference in the distribution of ages between individuals with and without diabetes. This suggests that age significantly impacts the likelihood of developing diabetes, likely reflecting that older age groups exhibit higher diabetes risk.
+
+BMI by Diabetes:
+With a chi-squared value of 1639.3 and a p-value < 2.2e-16, the null hypothesis that BMI distributions are the same across diabetic and non-diabetic groups is rejected. This indicates that BMI, as a measure of obesity, is a significant predictor of diabetes, where higher BMI levels are commonly associated with increased diabetes risk.
+
+HbA1c Level by Diabetes:
+The highest chi-squared value of 4941 with a p-value < 2.2e-16 strongly supports rejecting the null hypothesis, showing that HbA1c levels differ significantly between diabetic and non-diabetic individuals. HbA1c levels, which reflect long-term glucose control, are crucial in diagnosing diabetes and monitoring glucose management.
+
+Blood Glucose Level by Diabetes:
+Given a chi-squared value of 2415.4 and a p-value < 2.2e-16, the null hypothesis is rejected, confirming significant differences in blood glucose levels between the two groups. Elevated blood glucose is a direct indicator of diabetes, underscoring its critical role in diabetes diagnosis.
+
+Smoking History by Diabetes:
+The analysis results in a chi-squared of 565.48 with a p-value < 2.2e-16, leading to the rejection of the null hypothesis that there is no difference in smoking status between diabetic and non-diabetic individuals. This finding suggests that smoking history may influence the likelihood of developing diabetes, potentially due to the harmful effects of smoking on overall metabolic health.
+
+
+The statistical evidence from the Kruskal-Wallis tests allows us to reject the null hypothesis for each of the factors tested, supporting the alternate hypothesis that these lifestyle and medical factors indeed have significant impacts on the likelihood of developing diabetes. The study underscores the importance of age, body mass index, long-term glucose control (HbA1c), immediate glucose levels, and lifestyle choices (smoking) in influencing diabetes risk. These findings highlight the need for targeted prevention and management strategies that consider these factors to mitigate the risk and burden of diabetes in diverse populations.
+
+
+#Posthoc analysis
+#Dunn's test is a non-parametric procedure used to make multiple pairwise comparisons between groups after a Kruskal-Wallis test has indicated significant differences. 
+```{r}
+# Install and load necessary library
+install.packages("PMCMRplus")
+library(PMCMRplus)
+
+# Perform Kruskal-Wallis test for age across different levels of diabetes
+kruskal_result_age <- kruskal.test(age ~ diabetes, data = cleaned_dataset)
+
+# Check the result
+print(kruskal_result_age)
+
+# Perform post-hoc analysis for age using pairwise Wilcoxon rank sum tests with Bonferroni adjustment
+posthoc_age <- PMCMRplus::kwAllPairsDunnTest(cleaned_dataset$age, cleaned_dataset$diabetes, method = "bonferroni")
+
+# Print the post-hoc analysis result
+print(posthoc_age)
+
+# Similarly, perform post-hoc analysis for other variables like BMI, HbA1c level, and blood glucose level
+posthoc_bmi <- PMCMRplus::kwAllPairsDunnTest(cleaned_dataset$bmi, cleaned_dataset$diabetes, method = "bonferroni")
+posthoc_HbA1c <- PMCMRplus::kwAllPairsDunnTest(cleaned_dataset$HbA1c_level, cleaned_dataset$diabetes, method = "bonferroni")
+posthoc_blood_glucose <- PMCMRplus::kwAllPairsDunnTest(cleaned_dataset$blood_glucose_level, cleaned_dataset$diabetes, method = "bonferroni")
+
+# Print the post-hoc analysis results for BMI, HbA1c level, and blood glucose level
+print(posthoc_bmi)
+print(posthoc_HbA1c)
+print(posthoc_blood_glucose)
+```
+Interpretation: Results for Each Variable:
+Age: The Dunn's test results show a p-value of < 2e-16 when comparing age between diabetic and non-diabetic individuals. This indicates a statistically significant difference in age distributions between the two groups.
+
+BMI: Similarly, the Dunn's test for BMI also yields a p-value of < 2e-16, suggesting significant differences in BMI between individuals with and without diabetes.
+
+HbA1c Level: The test results for HbA1c level also report a p-value of < 2e-16, confirming significant variations in HbA1c levels between the diabetic and non-diabetic groups.
+
+Blood Glucose Level: The comparison for blood glucose levels produces a p-value of < 2e-16, indicating significant differences in blood glucose levels between groups.
+
+Adjustment Method and Alternative Hypothesis:
+Adjustment Method: The Holm method used here adjusts the significance levels of multiple comparisons to reduce the chances of type I errors (false positives). It's a conservative method that ensures the reliability of the results despite multiple tests.
+
+Alternative Hypothesis: The two-sided alternative hypothesis tested in each case implies that the test was looking for any difference in medians, regardless of which group had higher or lower values.
+Warnings About Ties: The warnings about ties in the data indicate that there were identical values (ties) that could affect the ranking process in the Kruskal-Wallis and Dunn's tests. Ties can lead to less precise test statistics, and adjustments (corrections for ties) were made to account for this, ensuring the test results remain valid.
+
+The results strongly suggest that there are significant differences in age, BMI, HbA1c, and blood glucose levels between individuals with and without diabetes. These differences are statistically significant even after adjusting for multiple comparisons, reinforcing the importance of these variables as distinguishing factors in the diagnosis and management of diabetes.
+
+
+
+
+
+
+
+
+
