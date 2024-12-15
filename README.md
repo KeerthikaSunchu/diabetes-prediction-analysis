@@ -58,7 +58,7 @@ This repository contains materials for the project **"Diabetes Prediction Analys
 - **Healthcare Providers**: Insights can guide personalized treatment plans for at-risk individuals.
 - **Public Health Strategies**: Findings can inform initiatives targeting modifiable risk factors like BMI and glucose levels.
 
-## Authors
+## Contributors
 
 - **Adarsh Viswanath**
 - **Amol Prakash**
